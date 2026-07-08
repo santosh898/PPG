@@ -1,0 +1,13 @@
+# Python dependencies for the Vercel serverless function (api/index.py).
+# Kept in sync with backend/requirements.txt, minus uvicorn (Vercel provides the
+# ASGI server). Set MONGODB_URI and HF_TOKEN as Vercel environment variables.
+fastapi>=0.115
+pymongo[srv]>=4.9
+pydantic>=2.7
+pydantic-settings>=2.4
+python-dotenv>=1.0
+httpx>=0.27
+langchain>=1.0,<2
+langgraph>=1.0,<2
+langchain-openai>=0.2
+huggingface-hub>=1.0
