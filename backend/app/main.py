@@ -1,7 +1,11 @@
 from __future__ import annotations
 
-from fastapi import Body, FastAPI, Query
+import logging
+import traceback
+
+from fastapi import Body, FastAPI, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
 from . import services
 from .actions import publish_public_update, update_issue_status
@@ -15,6 +19,8 @@ from .scenes import (
     get_priority_issues,
 )
 
+logger = logging.getLogger("uvicorn.error")
+
 app = FastAPI(title="People's Priorities API", version="1.0.0")
 
 app.add_middleware(
@@ -23,6 +29,17 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.exception_handler(Exception)
+async def unhandled_exception_handler(request: Request, exc: Exception) -> JSONResponse:
+    # Log the full traceback to stderr (visible in Vercel function logs) and
+    # return a short error message instead of a blank 500 body.
+    logger.error("Unhandled error on %s:\n%s", request.url.path, traceback.format_exc())
+    return JSONResponse(
+        status_code=500,
+        content={"error": "internal_error", "detail": f"{type(exc).__name__}: {exc}"},
+    )
 
 
 @app.get("/api/health")
