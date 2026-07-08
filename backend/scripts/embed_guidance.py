@@ -40,17 +40,25 @@ def ensure_index(col, name: str, filters: list[str]) -> None:
     if name in existing:
         current_fields = existing[name].get("latestDefinition", {}).get("fields", [])
         current_filters = {f["path"] for f in current_fields if f.get("type") == "filter"}
-        if current_filters >= set(filters):
+        current_dim = next(
+            (f.get("numDimensions") for f in current_fields if f.get("type") == "vector"), None
+        )
+        if current_dim is not None and current_dim != DIM:
+            print(f"[index] '{name}' dimension changed {current_dim} -> {DIM}; dropping and recreating ...")
+            col.drop_search_index(name)
+            time.sleep(5)
+        elif current_filters >= set(filters):
             print(f"[index] '{name}' already exists on {col.name} with required filters")
             return
-        print(f"[index] updating '{name}' on {col.name} to add filter fields {set(filters) - current_filters} ...")
-        try:
-            col.update_search_index(name=name, definition=definition)
-            print(f"[index] '{name}' update requested (rebuild takes ~1 min).")
-        except Exception as e:
-            print(f"[index] could not update programmatically ({type(e).__name__}: {e}).")
-            print(json.dumps({"name": name, "type": "vectorSearch", "definition": definition}, indent=2))
-        return
+        else:
+            print(f"[index] updating '{name}' on {col.name} to add filter fields {set(filters) - current_filters} ...")
+            try:
+                col.update_search_index(name=name, definition=definition)
+                print(f"[index] '{name}' update requested (rebuild takes ~1 min).")
+            except Exception as e:
+                print(f"[index] could not update programmatically ({type(e).__name__}: {e}).")
+                print(json.dumps({"name": name, "type": "vectorSearch", "definition": definition}, indent=2))
+            return
     print(f"[index] creating '{name}' on {col.name} ...")
     print(json.dumps({"name": name, "type": "vectorSearch", "definition": definition}, indent=2))
     try:

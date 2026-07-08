@@ -4,22 +4,27 @@ FastAPI + LangGraph (LangChain v1 `create_agent`) backend. It replaces the old
 TypeScript API routes. The Next.js frontend proxies `/api/*` to this service via
 a rewrite in `next.config.js`.
 
-- **LLM / tool-calling:** Hugging Face Inference Providers (OpenAI-compatible
-  router at `https://router.huggingface.co/v1`), model `deepseek-ai/DeepSeek-V3-0324`
-- **Embeddings:** local `sentence-transformers` (`intfloat/multilingual-e5-large`,
-  1024-dim) — no API/token required, runs on CPU
+- **LLM / tool-calling:** Google Gemini API (OpenAI-compatible endpoint at
+  `https://generativelanguage.googleapis.com/v1beta/openai/`), model
+  `gemini-2.5-flash-lite` — built for low-latency agentic/tool-calling, and
+  the free tier is quota-based (RPM/RPD) rather than a depleting credit pool
+- **Embeddings:** Gemini `gemini-embedding-001` via the native `google-genai`
+  SDK, truncated to 768 dims (Matryoshka Representation Learning) and
+  L2-normalized in `ai.py` (only the default 3072-dim output is
+  auto-normalized by the API)
 - **Vector search:** MongoDB Atlas `$vectorSearch` (`cluster_vector_index`,
   `guidance_vector_index`) — no in-memory fallback
 - **DB:** existing Atlas cluster, database `test`
 
 Config is read from the repo-root `.env` (via `../.env`): `MONGODB_URI`,
-`HF_TOKEN` (from https://huggingface.co/settings/tokens, needs "Inference
-Providers" permission), `HF_BASE_URL`, `CHAT_MODEL`, `EMBEDDING_MODEL`,
-`EMBEDDING_DIM`.
+`GEMINI_API_KEY` (from https://aistudio.google.com/apikey, no billing
+required for the free tier), `GEMINI_BASE_URL`, `CHAT_MODEL`,
+`EMBEDDING_MODEL`, `EMBEDDING_DIM`.
 
-> Note: NVIDIA's `deepseek-v4-flash` isn't available on HF (DeepSeek only
-> publishes the raw V4 weights there; no provider serves it). `DeepSeek-V3-0324`
-> is the closest tool-calling model actually served by HF Inference Providers.
+> We previously ran chat + embeddings through Hugging Face Inference
+> Providers, but its free tier is a depleting dollar-credit pool that caused
+> random `402` failures mid-session even on a fresh account/token. Gemini's
+> free tier fails predictably on rate limits (429) instead.
 
 ## Setup
 
@@ -59,7 +64,7 @@ Then run the Next.js frontend from the repo root (`npm run dev`); it proxies
 |------|---------|
 | `app/config.py` | env settings |
 | `app/db.py` | Mongo client + collection accessors |
-| `app/ai.py` | `ChatNVIDIA` (with transient-error retry), embeddings, `$vectorSearch` |
+| `app/ai.py` | Gemini chat client, embeddings (L2-normalized), `$vectorSearch` |
 | `app/scoring.py` | priority score v1 |
 | `app/clusters.py` | submission + cluster create / recompute |
 | `app/geo.py` | location resolution (name / GPS / Nominatim) |

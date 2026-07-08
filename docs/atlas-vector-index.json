@@ -1,10 +1,10 @@
 {
-  "_comment": "Atlas Vector Search index definition. Create this ONCE in the Atlas UI (Atlas Search -> Create Search Index -> JSON Editor) on database `peoples_priorities`, collection `issueclusters`. Index name must match ATLAS_VECTOR_INDEX in .env (default: cluster_vector_index). IMPORTANT: numDimensions must match your embedding model: 1536 for OpenAI text-embedding-3-small, 1024 for NVIDIA nvidia/nv-embedqa-e5-v5. Update the value below to match OPENAI_EMBEDDING_MODEL.",
+  "_comment": "Atlas Vector Search index definition. Create this ONCE in the Atlas UI (Atlas Search -> Create Search Index -> JSON Editor) on database `peoples_priorities`, collection `issueclusters`. Index name must match ATLAS_VECTOR_INDEX in .env (default: cluster_vector_index). IMPORTANT: numDimensions must match EMBEDDING_DIM in .env - 768 for gemini-embedding-001 (default, MRL-truncated + app-normalized). Also update backend/scripts/embed_guidance.py's DIM if you change this.",
   "fields": [
     {
       "type": "vector",
       "path": "embedding",
-      "numDimensions": 1024,
+      "numDimensions": 768,
       "similarity": "cosine"
     },
     {

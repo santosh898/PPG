@@ -1,55 +1,75 @@
 from __future__ import annotations
 
+import math
 from functools import lru_cache
 
-from huggingface_hub import InferenceClient
-from langchain_openai import ChatOpenAI
+from google import genai
+from google.genai import types as genai_types
+from langchain_google_genai import ChatGoogleGenerativeAI
 
 from .config import settings
 from .db import issue_clusters, guidance_resources
 
 # ---------------------------------------------------------------------------
-# Chat / tool-calling and embeddings both run through Hugging Face Inference
-# Providers (OpenAI-compatible router). The chat model is pinned to a
-# Groq-hosted model (LPU hardware, ~0.5-0.9s/call) to keep agent turns well
-# under a 2s budget - the shared/free HF router auto-picks a provider that
-# can be an order of magnitude slower. No heuristic fallbacks (MVP): if the
-# model genuinely fails the request errors out. max_retries/timeout are kept
-# tight so failures surface fast instead of hanging the user's request.
+# Chat / tool-calling and embeddings both run through the Google Gemini API,
+# using the native langchain-google-genai integration (NOT the OpenAI-
+# compatible shim - that endpoint silently ignores reasoning_effort and
+# leaves "thinking" on, adding 5-10s of pure overhead per call).
+# thinking_budget=0 fully disables reasoning tokens for gemini-2.5-flash-lite,
+# which is what makes this model fast enough for a sub-2s agent turn.
+# The free tier is quota-based (RPM/RPD) rather than a depleting dollar-
+# credit pool, but it is shared capacity and does return transient 503s
+# under load - max_retries covers that; it is not a heuristic fallback.
 # ---------------------------------------------------------------------------
 
 
 @lru_cache
-def get_chat() -> ChatOpenAI:
-    return ChatOpenAI(
+def get_chat() -> ChatGoogleGenerativeAI:
+    return ChatGoogleGenerativeAI(
         model=settings.chat_model,
-        base_url=settings.hf_base_url,
-        api_key=settings.hf_token,
+        api_key=settings.gemini_api_key,
         temperature=0.2,
+        thinking_budget=0,
         max_retries=1,
         timeout=20,
     )
 
 
 @lru_cache
-def _embed_client() -> InferenceClient:
-    return InferenceClient(token=settings.hf_token)
+def _genai_client() -> genai.Client:
+    return genai.Client(api_key=settings.gemini_api_key)
+
+
+def _normalize(vec: list[float]) -> list[float]:
+    """gemini-embedding-001 only auto-normalizes the default 3072-dim output;
+    at smaller (e.g. 768) dims we must L2-normalize ourselves so cosine
+    similarity in Atlas $vectorSearch is comparing directions, not magnitudes."""
+    norm = math.sqrt(sum(v * v for v in vec))
+    if norm == 0:
+        return vec
+    return [v / norm for v in vec]
+
+
+def _embed(text: str, task_type: str) -> list[float]:
+    result = _genai_client().models.embed_content(
+        model=settings.embedding_model,
+        contents=text[:8000],
+        config=genai_types.EmbedContentConfig(
+            task_type=task_type,
+            output_dimensionality=settings.embedding_dim,
+        ),
+    )
+    return _normalize(result.embeddings[0].values)
 
 
 def embed_passage(text: str) -> list[float]:
-    """Embed a stored document. e5 models require a 'passage:' prefix."""
-    vec = _embed_client().feature_extraction(
-        f"passage: {text[:8000]}", model=settings.embedding_model
-    )
-    return vec.tolist()
+    """Embed a stored document for later retrieval."""
+    return _embed(text, "RETRIEVAL_DOCUMENT")
 
 
 def embed_query(text: str) -> list[float]:
-    """Embed a search query. e5 models require a 'query:' prefix."""
-    vec = _embed_client().feature_extraction(
-        f"query: {text[:8000]}", model=settings.embedding_model
-    )
-    return vec.tolist()
+    """Embed a search query."""
+    return _embed(text, "RETRIEVAL_QUERY")
 
 
 # ---------------------------------------------------------------------------

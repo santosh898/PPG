@@ -22,18 +22,19 @@ class Settings(BaseSettings):
     # Mongoose connected without a db path, which defaults to "test" on Atlas.
     mongodb_db: str = "test"
 
-    # ---- Chat / tool-calling: Hugging Face Inference Providers (OpenAI-compatible) ----
-    # Pinned to the Groq provider for low, consistent tool-calling latency
-    # (~0.5-0.9s/call vs multi-second on the default shared router).
-    hf_token: str = ""
-    hf_base_url: str = "https://router.huggingface.co/v1"
-    chat_model: str = "openai/gpt-oss-120b:groq"
+    # ---- Chat / tool-calling + embeddings: Google Gemini API ----
+    # Free tier is quota-based (RPM/RPD), not a depleting dollar-credit pool.
+    gemini_api_key: str = ""
+    gemini_base_url: str = "https://generativelanguage.googleapis.com/v1beta/openai/"
+    # Flash-Lite: built for low-latency, high-frequency agentic/tool-calling.
+    chat_model: str = "gemini-2.5-flash-lite"
 
-    # ---- Embeddings: Hugging Face hosted Inference API (feature-extraction) ----
-    # multilingual-e5-large outputs 1024-dim vectors (matches the Atlas indexes)
-    # and covers English/Telugu/Hindi. Requires "query:"/"passage:" prefixes.
-    embedding_model: str = "intfloat/multilingual-e5-large"
-    embedding_dim: int = 1024
+    # ---- Embeddings: gemini-embedding-001 (native google-genai SDK) ----
+    # 768 dims via Matryoshka Representation Learning (Google's recommended
+    # balance of quality vs. storage). Not auto-normalized at this size - the
+    # app L2-normalizes vectors itself (see ai.py) before storing/querying.
+    embedding_model: str = "gemini-embedding-001"
+    embedding_dim: int = 768
 
     atlas_vector_index: str = "cluster_vector_index"
     guidance_vector_index: str = "guidance_vector_index"
