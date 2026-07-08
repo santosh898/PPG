@@ -90,10 +90,29 @@ def _save_message(conv_id, role: str, content: str) -> None:
     )
 
 
+def _text_content(content) -> str:
+    """Newer Gemini models (3.x) return AIMessage.content as a list of content
+    blocks (e.g. [{"type": "text", "text": "..."}]) rather than a plain string
+    when the response mixes text with other parts. Normalize both shapes."""
+    if isinstance(content, str):
+        return content.strip()
+    if isinstance(content, list):
+        parts = []
+        for block in content:
+            if isinstance(block, str):
+                parts.append(block)
+            elif isinstance(block, dict) and block.get("type") == "text":
+                parts.append(block.get("text", ""))
+        return "".join(parts).strip()
+    return ""
+
+
 def _final_answer(result_messages) -> str:
     for m in reversed(result_messages):
-        if getattr(m, "type", None) == "ai" and (m.content or "").strip():
-            return m.content.strip()
+        if getattr(m, "type", None) == "ai":
+            text = _text_content(m.content)
+            if text:
+                return text
     return ""
 
 

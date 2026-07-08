@@ -27,7 +27,7 @@ class Settings(BaseSettings):
     gemini_api_key: str = ""
     gemini_base_url: str = "https://generativelanguage.googleapis.com/v1beta/openai/"
     # Flash-Lite: built for low-latency, high-frequency agentic/tool-calling.
-    chat_model: str = "gemini-2.5-flash-lite"
+    chat_model: str = "gemini-3.1-flash-lite"
 
     # ---- Embeddings: gemini-embedding-001 (native google-genai SDK) ----
     # 768 dims via Matryoshka Representation Learning (Google's recommended
