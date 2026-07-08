@@ -13,6 +13,7 @@
     "clsx": "^2.1.1",
     "leaflet": "^1.9.4",
     "leaflet.heat": "^0.2.0",
+    "lucide-react": "^1.23.0",
     "mongoose": "^8.6.3",
     "next": "14.2.15",
     "openai": "^4.67.3",

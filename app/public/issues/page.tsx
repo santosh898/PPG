@@ -1,7 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Badge, Card } from "@/components/ui";
+import { Globe } from "lucide-react";
+import { Badge, Card, PageHeader } from "@/components/ui";
 import { CATEGORIES } from "@/lib/constants";
 
 interface PublicIssue {
@@ -34,15 +35,12 @@ export default function PublicIssuesPage() {
 
   return (
     <div className="space-y-4">
-      <div>
-        <h1 className="text-2xl font-bold text-slate-900">
-          Public Issue Tracker
-        </h1>
-        <p className="text-sm text-slate-500">
-          Anonymized local issue clusters and public updates. No personal data,
-          names, phone numbers, raw complaints or home locations are shown.
-        </p>
-      </div>
+      <PageHeader
+        icon={Globe}
+        eyebrow="Public and transparent"
+        title="Public Issue Tracker"
+        subtitle="Anonymized local issue clusters and public updates. No personal data, names, phone numbers, raw complaints or home locations are shown."
+      />
 
       <div className="flex flex-wrap items-center gap-2">
         <button

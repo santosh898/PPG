@@ -1,7 +1,8 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { Badge, Button, Card } from "@/components/ui";
+import { MessageCircleMore } from "lucide-react";
+import { Badge, Button, Card, PageHeader } from "@/components/ui";
 
 interface ChatMessage {
   role: "user" | "assistant";
@@ -89,14 +90,13 @@ export default function CitizenPage() {
   return (
     <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
       <div className="space-y-4">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">Report an Issue</h1>
-          <p className="text-sm text-slate-500">
-            Your issue will be recorded, grouped with similar local issues, and
-            made visible to the MP office. We will also suggest next steps. This
-            does not replace official grievance systems.
-          </p>
-        </div>
+        <PageHeader
+          icon={MessageCircleMore}
+          eyebrow="For citizens"
+          title="Report an Issue"
+          subtitle="Your issue will be recorded, grouped with similar local issues, and made visible to the MP office. We will also suggest next steps. This does not replace official grievance systems."
+          tone="emerald"
+        />
 
         <Card className="flex h-[520px] flex-col p-0">
           <div className="flex-1 space-y-3 overflow-y-auto p-4">

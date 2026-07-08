@@ -1,7 +1,9 @@
 "use client";
 
-import { useRef, useState } from "react";
-import { Badge, Button, Card, urgencyTone } from "@/components/ui";
+import { Suspense, useEffect, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { Sparkles } from "lucide-react";
+import { Badge, Button, Card, PageHeader, urgencyTone } from "@/components/ui";
 import { TrustBadges } from "@/components/TrustBadges";
 
 interface Priority {
@@ -38,6 +40,15 @@ const SUGGESTED = [
 ];
 
 export default function MpChatPage() {
+  return (
+    <Suspense fallback={null}>
+      <MpChatPageInner />
+    </Suspense>
+  );
+}
+
+function MpChatPageInner() {
+  const searchParams = useSearchParams();
   const [turns, setTurns] = useState<Turn[]>([
     {
       role: "assistant",
@@ -49,6 +60,16 @@ export default function MpChatPage() {
   const [loading, setLoading] = useState(false);
   const [conversationId, setConversationId] = useState<string | null>(null);
   const endRef = useRef<HTMLDivElement>(null);
+  const askedFromQuery = useRef(false);
+
+  useEffect(() => {
+    const q = searchParams.get("q");
+    if (q && !askedFromQuery.current) {
+      askedFromQuery.current = true;
+      ask(q);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
 
   async function ask(text: string) {
     if (!text.trim() || loading) return;
@@ -92,14 +113,12 @@ export default function MpChatPage() {
   return (
     <div className="grid gap-6 lg:grid-cols-[1fr_300px]">
       <div className="space-y-4">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">
-            MP Chat Intelligence
-          </h1>
-          <p className="text-sm text-slate-500">
-            Evidence-backed answers over the constituency knowledge base.
-          </p>
-        </div>
+        <PageHeader
+          icon={Sparkles}
+          eyebrow="For officials"
+          title="MP Chat Intelligence"
+          subtitle="Evidence-backed answers over the constituency knowledge base."
+        />
 
         <div className="space-y-4">
           {turns.map((t, i) => (

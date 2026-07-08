@@ -1,7 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Badge, Button, Card, urgencyTone } from "@/components/ui";
+import { ClipboardList } from "lucide-react";
+import { Badge, Button, Card, PageHeader, urgencyTone } from "@/components/ui";
 import { CATEGORIES, CLUSTER_STATUS } from "@/lib/constants";
 
 interface SubmissionRow {
@@ -40,13 +41,12 @@ export default function StaffPage() {
 
   return (
     <div className="space-y-4">
-      <div>
-        <h1 className="text-2xl font-bold text-slate-900">Staff Console</h1>
-        <p className="text-sm text-slate-500">
-          Enter offline complaints, review AI-extracted fields, and manage issue
-          clusters and reports.
-        </p>
-      </div>
+      <PageHeader
+        icon={ClipboardList}
+        eyebrow="Internal tool"
+        title="Staff Console"
+        subtitle="Enter offline complaints, review AI-extracted fields, and manage issue clusters and reports."
+      />
 
       <div className="flex flex-wrap gap-2">
         {(

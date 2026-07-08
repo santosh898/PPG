@@ -123,3 +123,15 @@ export const DEFAULT_CONSTITUENCY = {
   state: "Andhra Pradesh",
   district: "Visakhapatnam",
 };
+
+/**
+ * This MVP covers a single constituency only. The dashboard map is
+ * intentionally locked to this bounding box (covers the city plus
+ * surrounding mandals like Madhurwada, Gajuwaka, Pendurthi) instead of a
+ * free-pan world map, since there is no other constituency to switch to.
+ */
+export const CONSTITUENCY_MAP_CENTER: [number, number] = [17.6868, 83.2185];
+export const CONSTITUENCY_MAP_BOUNDS: [[number, number], [number, number]] = [
+  [17.55, 83.05],
+  [17.85, 83.4],
+];
